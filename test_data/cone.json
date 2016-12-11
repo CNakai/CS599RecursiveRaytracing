@@ -1,0 +1,31 @@
+[
+    {
+	"type": "camera",
+	"width": 1,
+	"height": 1,
+	"position": [0, 1, -7]
+    },
+    {
+	"type": "quadric",
+	"diffuse_color": [1, 0, 0],
+	"specular_color": [1, 1, 1],
+	"A": 1,
+	"B": -1,
+	"C": 1
+    },
+    {
+	"type": "plane",
+	"color": [0, 1, 0],
+	"position": [0, -2, 0],
+	"normal": [0, 1, 0]
+    }
+    {
+	"type": "light",
+	"color": [5, 5, 5],
+	"theta": 0,
+	"radial-a2": 0.125,
+	"radial-a1": 0.125,
+	"radial-a0": 0.125,
+	"position": [-6, 1, 0]
+    }
+]
