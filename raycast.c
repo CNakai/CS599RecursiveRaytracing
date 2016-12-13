@@ -152,7 +152,7 @@ static ObjectRef shoot(RayRef r, Point intersection) {
   double reflective_contrib[3] = {0};
   get_reflective_contrib(intersect, intersected_obj, view_n, surface_n, r_level, reflective_contrib);
   double refractive_contrib[3] = {0};
-  get_refractive_contrib(intersect, intersected_obj, view_n, surface_n, r_level, reflective_contrib);
+  get_refractive_contrib(intersect, intersected_obj, view_n, surface_n, r_level, refractive_contrib);
 
   vec_add(reflective_contrib, color_out, color_out);
   vec_add(refractive_contrib, color_out, color_out);
