@@ -129,8 +129,10 @@ static ObjectRef shoot(RayRef r, Point intersection) {
     double diffuse_contrib[3] = {0.0};
     get_diffuse_contrib(light, intersectward_n, surface_n, diffuse_contrib);
 
+    double inv_view_n[3] = {0.0};
+    vec_scale(view_n, -1.0, inv_view_n);
     double specular_contrib[3] = {0.0};
-    get_specular_contrib(light, intersectward_n, surface_n, view_n, intersected_obj->ns, specular_contrib);
+    get_specular_contrib(light, intersectward_n, surface_n, inv_view_n, intersected_obj->ns, specular_contrib);
 
     attenuate_radially(light, dist_to_light, diffuse_contrib, specular_contrib);
 
@@ -142,7 +144,7 @@ static ObjectRef shoot(RayRef r, Point intersection) {
   }
 
   vec_add(total_diffuse, total_specular, color_out);
-  vec_scale(color_out, (1 - (intersected_obj->reflectivity + intersected_obj->refractivity)), color_out);
+  vec_scale(color_out, (1.0 - (intersected_obj->reflectivity + intersected_obj->refractivity)), color_out);
 
   if(r_level <= 0)
     return;
@@ -171,9 +173,7 @@ static void get_reflective_contrib(double *intersect, ObjectRef intersected_obj,
     return;
   }
 
-  double refl_view_n[3] = {0.0};
-  vec_scale(refl_ray.dir, -1.0, refl_view_n);
-  shade(refl_intersect, refl_obj, refl_view_n, r_level - 1, reflective_contrib);
+  shade(refl_intersect, refl_obj, refl_ray.dir, r_level - 1, reflective_contrib);
   vec_scale(reflective_contrib, intersected_obj->reflectivity, reflective_contrib);
 }
 
