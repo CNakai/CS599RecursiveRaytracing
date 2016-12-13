@@ -10,13 +10,16 @@
 #include "pixelbuf.h"
 #include "vecmath.h"
 
+#define RECURSIVE_DEPTH 7
+
 static PixelBufRef s_raycast(void);
 static ObjectRef shoot(RayRef, double*);
-static void shade(double*, ObjectRef, double*);
+static void shade(double*, ObjectRef, double*, int, double*);
 static void get_lightward_ray(double*, LightRef, RayRef);
 static bool ray_intersects_objects(RayRef, double);
 static void get_cameraward_normal(double*, double*);
-
+static void get_reflective_contrib(double*, ObjectRef, double*, double*, int, double*);
+// static void get_refractive_contrib(double*, ObjectRef, double*, double*, int, double*);
 static CameraRef camera;
 static ObjectRef *objects;
 static LightRef *lights;
@@ -69,8 +72,10 @@ static PixelBufRef s_raycast() {
       vec_normalize(camera_to_pixel_center, r->dir);
       ObjectRef intersected_obj = shoot(r, intersection_point);
       if(NULL != intersected_obj) {
+	double cameraward_n[3] = {0.0};
+	get_cameraward_normal(intersection_point, cameraward_n);
 	double color_at_point[3] = {0.0};
-	shade(intersection_point, intersected_obj, color_at_point);
+	shade(intersection_point, intersected_obj, cameraward_n, RECURSIVE_DEPTH, color_at_point);
 	color_pixel(pb, color_at_point, row, col);
       } else {
 	color_pixel(pb, bg_color, row, col);
@@ -97,9 +102,12 @@ static ObjectRef shoot(RayRef r, Point intersection) {
 }
 
 
-static void shade(double *intersect, ObjectRef intersected_obj, double *color_out) {
+ static void shade(double *intersect, ObjectRef intersected_obj, double *view_n, int r_level,
+		   double *color_out) {
   double total_diffuse[3] = {0.0};
   double total_specular[3] = {0.0};
+  double surface_n[3] = {0.0};
+  get_surface_normal(intersected_obj, intersect, surface_n);
 
   for(LightRef *lights_iter = lights; NULL != *lights_iter; lights_iter++) {
     LightRef light = *lights_iter;
@@ -113,8 +121,6 @@ static void shade(double *intersect, ObjectRef intersected_obj, double *color_ou
       continue;
     }
 
-    double surface_n[3] = {0.0};
-    get_surface_normal(intersected_obj, intersect, surface_n);
     if(vec_dot(surface_n, intersectward_n) > 0) {
       vec_scale(surface_n, -1, surface_n);
     }
@@ -122,8 +128,6 @@ static void shade(double *intersect, ObjectRef intersected_obj, double *color_ou
     double diffuse_contrib[3] = {0.0};
     get_diffuse_contrib(light, intersectward_n, surface_n, diffuse_contrib);
 
-    double view_n[3] = {0.0};
-    get_cameraward_normal(intersect, view_n);
     double specular_contrib[3] = {0.0};
     get_specular_contrib(light, intersectward_n, surface_n, view_n, intersected_obj->ns, specular_contrib);
 
@@ -137,7 +141,46 @@ static void shade(double *intersect, ObjectRef intersected_obj, double *color_ou
   }
 
   vec_add(total_diffuse, total_specular, color_out);
+  vec_scale(color_out, (1 - (intersected_obj->reflectivity + intersected_obj->refractivity)), color_out);
+
+  if(r_level <= 0)
+    return;
+  double reflective_contrib[3] = {0};
+  get_reflective_contrib(intersect, intersected_obj, view_n, surface_n, r_level, reflective_contrib);
+  //double refractive_contrib[3] = {0};
+  //get_refractive_contrib(/* ... */, r_level, refractive_contrib);
+
+  vec_add(reflective_contrib, color_out, color_out);
+  //vec_add(refractive_contrib, color_out, color_out);
+ }
+
+
+static void get_reflective_contrib(double *intersect, ObjectRef intersected_obj, double *view_n,
+				   double *surface_n, int r_level, double *reflective_contrib) {
+  Ray refl_ray = {{intersect[X], intersect[Y], intersect[Z]}, {0.0}};
+  vec_reflect(view_n, surface_n, refl_ray.dir);
+  scooch_ray_origin(&refl_ray);
+
+  double refl_intersect[3] = {0.0};
+  ObjectRef refl_obj = shoot(&refl_ray, refl_intersect);
+  if(NULL == refl_obj) {
+    reflective_contrib[X] = 0.0;
+    reflective_contrib[Y] = 0.0;
+    reflective_contrib[Z] = 0.0;
+    return;
+  }
+
+  double refl_view_n[3] = {0.0};
+  vec_scale(refl_ray.dir, -1.0, refl_view_n);
+  shade(refl_intersect, refl_obj, refl_view_n, r_level - 1, reflective_contrib);
+  vec_scale(reflective_contrib, intersected_obj->reflectivity, reflective_contrib);
 }
+
+
+/* static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj, double *surface_n,
+   double *view_n, int r_level, double *reflective_contrib) {
+   ;
+   } */
 
 
 static void get_lightward_ray(double *point, LightRef light, RayRef out) {

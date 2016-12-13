@@ -14,6 +14,8 @@ struct Object {
   double *diffuse_color;
   double *specular_color;
   double ns;
+  double reflectivity;
+  double refractivity;
   union {
     struct {
       double *position;

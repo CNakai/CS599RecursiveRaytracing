@@ -125,3 +125,9 @@ void get_inter_point_normal_vector(double *from, double *to, double *out) {
 void get_next_point_along_ray(RayRef ray, double *out) {
   point_on_ray_at_t(ray, 0.0000000001, out);
 }
+
+void scooch_ray_origin(RayRef ray) {
+  double new_origin[3] = {0};
+  get_next_point_along_ray(ray, new_origin);
+  vec_copy(new_origin, ray->origin);
+}

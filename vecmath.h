@@ -37,5 +37,6 @@ void point_subtract(Point, Point, Point);
 double point_distance(Point, Point);
 void get_inter_point_normal_vector(double *, double *, double *);
 void get_next_point_along_ray(RayRef, double *);
+void scooch_ray_origin(RayRef);
 
 #endif
