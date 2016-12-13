@@ -220,10 +220,12 @@ static void get_refractive_ray(RayRef refr_ray, double *view_n, double *surface_
   if(obj != surrounding_obj || NULL == surrounding_obj) {
     vec_copy(internal_ray.origin, refr_ray->origin);
     vec_copy(internal_ray.dir, refr_ray->dir);
+    scooch_ray_origin(refr_ray);
     return;
   } else {
     vec_copy(internal_intersect, refr_ray->origin);
     vec_copy(view_n, refr_ray->dir);
+    scooch_ray_origin(refr_ray);
     double out_surface_n[3] = {0.0};
     get_surface_normal(obj, internal_intersect, out_surface_n);
     if(-vec_dot(view_n, surface_n) != vec_dot(refr_ray->dir, out_surface_n)) {
