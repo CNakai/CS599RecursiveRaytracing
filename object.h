@@ -16,6 +16,7 @@ struct Object {
   double ns;
   double reflectivity;
   double refractivity;
+  double ior;
   union {
     struct {
       double *position;

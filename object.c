@@ -33,6 +33,7 @@ static double* get_specular_color_from_spec(SpecRef);
 static double get_ns(SpecRef);
 static double get_reflectivity_from_spec(SpecRef);
 static double get_refractivity_from_spec(SpecRef);
+static double get_ior_from_spec(SpecRef);
 static void validate_object(ObjectRef);
 static double plane_intersection(RayRef, ObjectRef);
 static double sphere_intersection(RayRef, ObjectRef);
@@ -265,6 +266,7 @@ static ObjectRef new_object_from_spec(SpecRef osr) {
   o->ns = get_ns(osr);
   o->reflectivity = get_reflectivity_from_spec(osr);
   o->refractivity = get_refractivity_from_spec(osr);
+  o->ior = get_ior_from_spec(osr);
 
   validate_object(o);
  
@@ -343,6 +345,20 @@ static double get_refractivity_from_spec(SpecRef osr) {
 }
 
 
+static double get_ior_from_spec(SpecRef osr) {
+  double ior = next_scalar_field_value_with_name(osr, "ior");
+
+  if(NO_SCALAR == ior) {
+    #ifdef DEBUG_NOTICE
+    fprintf(stderr, "NOTICE: No 'ior' was specified for object\n");
+    fprintf(stderr, "NOTICE: Assigning default of 1.0\n");
+    #endif
+    return 1.0;
+  }
+
+  return ior;
+}
+
 static void validate_object(ObjectRef o) {
   if(NULL == o->specular_color) {
     fprintf(stderr, "Error: No specular color for object\n");
@@ -366,6 +382,10 @@ static void validate_object(ObjectRef o) {
   }
   if(o->reflectivity + o->refractivity > 1.0) {
     fprintf(stderr, "Error: Sum of object reflectivity and refractivity exceeds 1.0\n");
+    exit(EXIT_FAILURE);
+  }
+  if(NO_SCALAR == o->ior) {
+    fprintf(stderr, "Error: No ior for object\n");
     exit(EXIT_FAILURE);
   }
 }
