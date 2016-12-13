@@ -179,8 +179,8 @@ static void get_reflective_contrib(double *intersect, ObjectRef intersected_obj,
 }
 
 
-static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj, double *surface_n,
-				   double *view_n, int r_level, double *refractive_contrib) {
+static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj, double *view_n,
+				   double *surface_n, int r_level, double *refractive_contrib) {
   Ray refr_ray = {{0.0}, {0.0}};
   get_refractive_ray(&refr_ray, view_n, surface_n, intersect, intersected_obj->ior);
   double refr_intersect[3] = {0.0};
@@ -215,11 +215,11 @@ static void get_refractive_ray(RayRef refr_ray, double *view_n, double *surface_
   vec_cross(a, surface_n, b);
   double sin_phi = (1.0/ior) * vec_dot(view_n, b);
   double cos_phi = sqrt(1 - pow(sin_phi, 2));
-  double scaled_view_n[3] = {0.0};
-  vec_scale(view_n, -cos_phi, scaled_view_n);
+  double scaled_surface_n[3] = {0.0};
+  vec_scale(surface_n, -cos_phi, scaled_surface_n);
   double scaled_b_n[3] = {0.0};
   vec_scale(b, sin_phi, scaled_b_n);
-  vec_add(scaled_view_n, scaled_b_n, refr_ray->dir);
+  vec_add(scaled_surface_n, scaled_b_n, refr_ray->dir);
   scooch_ray_origin(refr_ray);
 }
 
