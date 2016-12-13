@@ -414,8 +414,11 @@ static double sphere_intersection(RayRef r, ObjectRef s) {
   double dist_closest_point_to_center = point_distance(closest_point_to_s_center_on_r, s->sphere.position);
   if(dist_closest_point_to_center > s->sphere.radius) return MISS;
   if(dist_closest_point_to_center == s->sphere.radius) return dist_closest_point_to_center;
-
-  return closest_t_to_s_center - sqrt(pow(s->sphere.radius, 2) - pow(dist_closest_point_to_center, 2));
+  if(point_distance(r->origin, s->sphere.position) < s->sphere.radius) {
+    return closest_t_to_s_center + sqrt(pow(s->sphere.radius, 2) - pow(dist_closest_point_to_center, 2));
+  } else {
+    return closest_t_to_s_center - sqrt(pow(s->sphere.radius, 2) - pow(dist_closest_point_to_center, 2));
+  }
 }
 
 
