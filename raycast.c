@@ -20,7 +20,7 @@ static bool ray_intersects_objects(RayRef, double);
 static void get_cameraward_normal(double*, double*);
 static void get_reflective_contrib(double*, ObjectRef, double*, double*, int, double*);
 static void get_refractive_contrib(double*, ObjectRef, double*, double*, int, double*);
-static void get_refractive_ray(RayRef, double*, double*, double*, ObjectRef);
+static void get_refractive_ray(RayRef, double*, double*, double*, double);
 static CameraRef camera;
 static ObjectRef *objects;
 static LightRef *lights;
@@ -124,7 +124,7 @@ static ObjectRef shoot(RayRef r, Point intersection) {
     }
 
     if(vec_dot(surface_n, intersectward_n) > 0) {
-      vec_scale(surface_n, -1, surface_n);
+      vec_scale(surface_n, -1.0, surface_n);
     }
 
     double diffuse_contrib[3] = {0.0};
@@ -182,9 +182,16 @@ static void get_reflective_contrib(double *intersect, ObjectRef intersected_obj,
 static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj, double *surface_n,
 				   double *view_n, int r_level, double *refractive_contrib) {
   Ray refr_ray = {{0.0}, {0.0}};
-  get_refractive_ray(&refr_ray, view_n, surface_n, intersect, intersected_obj);
-  
+  get_refractive_ray(&refr_ray, view_n, surface_n, intersect, intersected_obj->ior);
   double refr_intersect[3] = {0.0};
+  ObjectRef maybe_surrounding_obj = shoot(&refr_ray, refr_intersect);
+  if(maybe_surrounding_obj == intersected_obj) {
+    double internal_surface_n[3] = {0.0};
+    get_surface_normal(intersected_obj, refr_intersect, internal_surface_n);
+    vec_scale(internal_surface_n, -1.0, internal_surface_n);
+    get_refractive_ray(&refr_ray, refr_ray.dir, internal_surface_n, refr_intersect, 1/intersected_obj->ior);
+  } 
+
   ObjectRef refr_obj = shoot(&refr_ray, refr_intersect);
   if(NULL == refr_obj) {
     refractive_contrib[X] = 0.0;
@@ -199,42 +206,21 @@ static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj,
 
 
 static void get_refractive_ray(RayRef refr_ray, double *view_n, double *surface_n, double *intersect,
-			       ObjectRef obj) {
-  Ray internal_ray = {{intersect[X], intersect[Y], intersect[Z]}, {0.0}};
+			       double ior) {
+  vec_copy(intersect, refr_ray->origin);
   double a[3] = {0.0};
   vec_cross(surface_n, view_n, a);
   vec_normalize(a, a);
   double b[3] = {0.0};
   vec_cross(a, surface_n, b);
-  double sin_phi = (1.0/obj->ior) * vec_dot(view_n, b);
+  double sin_phi = (1.0/ior) * vec_dot(view_n, b);
   double cos_phi = sqrt(1 - pow(sin_phi, 2));
   double scaled_view_n[3] = {0.0};
   vec_scale(view_n, -cos_phi, scaled_view_n);
   double scaled_b_n[3] = {0.0};
   vec_scale(b, sin_phi, scaled_b_n);
-  vec_add(scaled_view_n, scaled_b_n, internal_ray.dir);
-  scooch_ray_origin(&internal_ray);
-
-  double internal_intersect[3] = {0.0};
-  ObjectRef surrounding_obj = shoot(&internal_ray, internal_intersect);
-  if(obj != surrounding_obj || NULL == surrounding_obj) {
-    vec_copy(internal_ray.origin, refr_ray->origin);
-    vec_copy(internal_ray.dir, refr_ray->dir);
-    scooch_ray_origin(refr_ray);
-    return;
-  } else {
-    vec_copy(internal_intersect, refr_ray->origin);
-    vec_copy(view_n, refr_ray->dir);
-    scooch_ray_origin(refr_ray);
-    double out_surface_n[3] = {0.0};
-    get_surface_normal(obj, internal_intersect, out_surface_n);
-    if(-vec_dot(view_n, surface_n) != vec_dot(refr_ray->dir, out_surface_n)) {
-      printf("ERROR: ASSUMPTION VIOLATED!!!!\n");
-    }
-    return;
-  }
-  printf("PANIC: Sump'n real bad hap'nin!\n");
-  exit(EXIT_FAILURE);
+  vec_add(scaled_view_n, scaled_b_n, refr_ray->dir);
+  scooch_ray_origin(refr_ray);
 }
 
 
