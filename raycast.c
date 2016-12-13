@@ -72,10 +72,11 @@ static PixelBufRef s_raycast() {
       vec_normalize(camera_to_pixel_center, r->dir);
       ObjectRef intersected_obj = shoot(r, intersection_point);
       if(NULL != intersected_obj) {
-	double cameraward_n[3] = {0.0};
-	get_cameraward_normal(intersection_point, cameraward_n);
+	double view_n[3] = {0.0};
+	get_cameraward_normal(intersection_point, view_n);
+	vec_scale(view_n, -1.0, view_n);
 	double color_at_point[3] = {0.0};
-	shade(intersection_point, intersected_obj, cameraward_n, RECURSIVE_DEPTH, color_at_point);
+	shade(intersection_point, intersected_obj, view_n, RECURSIVE_DEPTH, color_at_point);
 	color_pixel(pb, color_at_point, row, col);
       } else {
 	color_pixel(pb, bg_color, row, col);
