@@ -16,6 +16,7 @@ samples: raycast
 	./raycast 500 500 test_data/reflect.json sample_outputs/reflect.ppm
 	./raycast 500 500 test_data/refract.json sample_outputs/refract.ppm
 	./raycast 500 500 test_data/mix_rr.json sample_outputs/mix_rr.ppm
+	./raycast 500 500 test_data/reflect_cone.json sample_outputs/reflect_cone.ppm
 
 main.o: spec.h camera.h object.h light.h pixelbuf.h raycast.h ppmwrite.h
 raycast.o: raycast.h camera.h object.h light.h pixelbuf.h vecmath.h
