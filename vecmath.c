@@ -1,11 +1,10 @@
 #include <stdlib.h>
+#include <string.h>
 #include "vecmath.h"
 #include "util.h"
 
 void vec_copy(Vec from, Vec into) {
-  into[X] = from[X];
-  into[Y] = from[Y];
-  into[Z] = from[Z];
+  memcpy(into, from, sizeof(double * 3);
 }
 
 
