@@ -14,7 +14,7 @@
 
 static PixelBufRef s_raycast(void);
 static ObjectRef shoot(RayRef, double*);
-static void shade(double*, ObjectRef, double*, int, double*);
+static void shade(double *color_out, double *intersect, ObjectRef intersected_obj, double *view_n, int r_level);
 static void get_lightward_ray(double*, LightRef, RayRef);
 static bool ray_intersects_objects(RayRef, double);
 static void get_cameraward_normal(double *out, double *from_point);
@@ -77,7 +77,7 @@ static PixelBufRef s_raycast() {
 	get_cameraward_normal(view_n, intersection_point);
 	vec_scale(view_n, -1.0, view_n);
 	double color_at_point[3] = {0.0};
-	shade(intersection_point, intersected_obj, view_n, RECURSIVE_DEPTH, color_at_point);
+	shade(color_at_point, intersection_point, intersected_obj, view_n, RECURSIVE_DEPTH);
 	color_pixel(pb, color_at_point, row, col);
       } else {
 	color_pixel(pb, bg_color, row, col);
@@ -104,8 +104,8 @@ static ObjectRef shoot(RayRef r, Point intersection) {
 }
 
 
- static void shade(double *intersect, ObjectRef intersected_obj, double *view_n, int r_level,
-		   double *color_out) {
+static void shade(double *color_out, double *intersect, ObjectRef intersected_obj, double *view_n,
+		  int r_level) {
   double total_diffuse[3] = {0.0};
   double total_specular[3] = {0.0};
   double surface_n[3] = {0.0};
@@ -174,7 +174,7 @@ static void get_reflective_contrib(double *intersect, ObjectRef intersected_obj,
     return;
   }
 
-  shade(refl_intersect, refl_obj, refl_ray.dir, r_level - 1, reflective_contrib);
+  shade(reflective_contrib, refl_intersect, refl_obj, refl_ray.dir, r_level - 1);
   vec_scale(reflective_contrib, intersected_obj->reflectivity, reflective_contrib);
 }
 
@@ -200,7 +200,7 @@ static void get_refractive_contrib(double *intersect, ObjectRef intersected_obj,
     return;
   }
 
-  shade(refr_intersect, refr_obj, refr_ray.dir, r_level - 1, refractive_contrib);
+  shade(refractive_contrib, refr_intersect, refr_obj, refr_ray.dir, r_level - 1);
   vec_scale(refractive_contrib, intersected_obj->refractivity, refractive_contrib);
 }
 
