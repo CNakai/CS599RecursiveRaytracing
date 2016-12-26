@@ -4,7 +4,7 @@
 #include "util.h"
 
 void vec_copy(Vec from, Vec into) {
-  memcpy(into, from, sizeof(double * 3);
+  memcpy(into, from, sizeof(double) * 3);
 }
 
 
