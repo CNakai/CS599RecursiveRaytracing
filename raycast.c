@@ -17,7 +17,7 @@ static ObjectRef shoot(RayRef, double*);
 static void shade(double*, ObjectRef, double*, int, double*);
 static void get_lightward_ray(double*, LightRef, RayRef);
 static bool ray_intersects_objects(RayRef, double);
-static void get_cameraward_normal(double*, double*);
+static void get_cameraward_normal(double *out, double *from_point);
 static void get_reflective_contrib(double*, ObjectRef, double*, double*, int, double*);
 static void get_refractive_contrib(double*, ObjectRef, double*, double*, int, double*);
 static void get_refractive_ray(RayRef, double*, double*, double*, double);
@@ -74,7 +74,7 @@ static PixelBufRef s_raycast() {
       ObjectRef intersected_obj = shoot(r, intersection_point);
       if(NULL != intersected_obj) {
 	double view_n[3] = {0.0};
-	get_cameraward_normal(intersection_point, view_n);
+	get_cameraward_normal(view_n, intersection_point);
 	vec_scale(view_n, -1.0, view_n);
 	double color_at_point[3] = {0.0};
 	shade(intersection_point, intersected_obj, view_n, RECURSIVE_DEPTH, color_at_point);
@@ -251,7 +251,7 @@ static bool ray_intersects_objects(RayRef lightward_r, double distance_to_light)
 }
 
 
-static void get_cameraward_normal(double *from_point, double *out) {
+static void get_cameraward_normal(double *out, double *from_point) {
   vec_subtract(camera->position, from_point, out);
   vec_normalize(out, out);
 }
